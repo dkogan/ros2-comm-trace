@@ -254,14 +254,17 @@ u:{{PUB}}:"*Publisher*do_intra_process_ros_message_publish*"
 
   $topic = str($Publisher->rcl_publisher->impl->rmw_handle->topic_name);
 
-  // Using the topic as the msgid: the publisher gid uniquely identifies the
-  // pub/sub set with fastrtps, but NOT with cyclone. I don't know why, but I
-  // can use the topic instead
-  //
-  // $msgid = $Publisher->rmw_gid.data;
-  $msgid = $topic;
+  if({{EVENT_MATCH_CONDITION}})
+  {
+    // Using the topic as the msgid: the publisher gid uniquely identifies the
+    // pub/sub set with fastrtps, but NOT with cyclone. I don't know why, but I
+    // can use the topic instead
+    //
+    // $msgid = $Publisher->rmw_gid.data;
+    $msgid = $topic;
 
-  @t_ns[$msgid] = elapsed;
+    @t_ns[$msgid] = elapsed;
+  }
 }
 
 
@@ -270,19 +273,22 @@ u:{{SUB}}:*Subscription*"handle_message*"
   $Subscription = (struct Subscription*)arg0; // this
   $topic = str( $Subscription->rcl_subscription->impl->rmw_handle->topic_name );
 
-  $message_info = (uint8*)arg2;
-  $rmw_message_info = (struct rmw_message_info_t*)($message_info + 8);
+  if({{EVENT_MATCH_CONDITION}})
+  {
+    $message_info = (uint8*)arg2;
+    $rmw_message_info = (struct rmw_message_info_t*)($message_info + 8);
 
-  // Using the topic as the msgid: the publisher gid uniquely identifies the
-  // pub/sub set with fastrtps, but NOT with cyclone. I don't know why, but I
-  // can use the topic instead
-  //
-  // $msgid = $rmw_message_info->publisher_gid.data;
-  $msgid = $topic;
+    // Using the topic as the msgid: the publisher gid uniquely identifies the
+    // pub/sub set with fastrtps, but NOT with cyclone. I don't know why, but I
+    // can use the topic instead
+    //
+    // $msgid = $rmw_message_info->publisher_gid.data;
+    $msgid = $topic;
 
-  printf("%ld %s\n",
-    elapsed - @t_ns[$msgid],
-    $topic);
+    printf("%ld %s\n",
+      elapsed - @t_ns[$msgid],
+      $topic);
+  }
 }
 
 END

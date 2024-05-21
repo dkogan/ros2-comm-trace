@@ -1,28 +1,33 @@
 #!/bin/zsh
 
 read -r -d '' usage <<EOF || true
-Usage: $0 [--plot] ELF_PUB ELF_SUB
+Usage: $0 [--plot] [--topic TOPIC] ELF_PUB ELF_SUB
 
 SYNOPSIS
 
   \$ $0 --plot libpublisher.so libsubscriber.so
-  [ a realtime plot of latencies pops up ]
+  [ a realtime plot of latencies for ALL messages pops up ]
 
 DESCRIPTION
 
 This is a wrapper around a bpftrace script for ros2 tracing of communication
 latencies. By default this runs bpftrace, and produces its output on stdout.
-With --plot, this output is plotted in realtime
+With --plot, this output is plotted in realtime.
+
+If given, we only report the messages sent/received on the TOPIC. Otherwise we
+report on all the topics
 
 Arguments:
 
   --plot: if given, plot the latency in realtime
 
+  --topic TOPIC: if given, only look for communcation on TOPIC
+
 EOF
 
 # comma-separated list of long options. Trailing : means "has required
 # argument".
-longopts='plot'
+longopts='plot,topic:'
 Ntrailing_options_required=2
 
 # The parsing code to use getopt comes from
@@ -44,6 +49,12 @@ while {true} {
 		'--plot')
 			plot=1
 			shift
+			continue
+		;;
+
+		'--topic')
+			topic=$2
+			shift 2
 			continue
 		;;
 
@@ -87,7 +98,17 @@ if ! [[ -f "$SUB" ]] {
        exit 1
 }
 
-cmd=(sudo zsh -c "bpftrace -q <( <ros2-comm-trace.bt | sed 's@{{PUB}}@$PUB@g; s@{{SUB}}@$SUB@g;' )")
+if [[ -n "$topic" ]] {
+  event_match_condition="\$topic == \"$topic\""
+} else {
+  event_match_condition="1"
+}
+
+cmd=(sudo zsh -c "bpftrace -q <( <ros2-comm-trace.bt \
+                                 | sed 's@{{PUB}}@$PUB@g;
+                                        s@{{SUB}}@$SUB@g;
+                                        s@{{EVENT_MATCH_CONDITION}}@$event_match_condition@g;'
+                               )")
 
 if ((plot)) {
    $cmd \
