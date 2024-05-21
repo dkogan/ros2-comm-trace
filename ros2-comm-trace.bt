@@ -1,0 +1,292 @@
+/* -*- c -*- */
+
+struct rmw_gid_t {
+    const char *implementation_identifier;
+    uint8_t data[24];
+};
+
+struct rmw_time_point_value_t {
+  uint64_t value;
+};
+
+struct rmw_message_info_t {
+    struct rmw_time_point_value_t source_timestamp;
+    struct rmw_time_point_value_t received_timestamp;
+    uint64_t publication_sequence_number;
+    uint64_t reception_sequence_number;
+    struct rmw_gid_t publisher_gid;
+    uint32_t from_intra_process;
+};
+
+struct rmw_time_t {
+    uint64_t sec;
+    uint64_t nsec;
+};
+
+struct rmw_qos_profile_t {
+    uint32_t history; // enum
+    size_t depth;
+    uint32_t reliability; // enum
+    uint32_t durability; // enum
+    struct rmw_time_t deadline;
+    struct rmw_time_t lifespan;
+    uint32_t liveliness; // enum
+    struct rmw_time_t liveliness_lease_duration;
+    uint32_t avoid_ros_namespace_conventions;
+};
+
+struct rcl_allocator_t {
+    void *function_allocate;
+    void *function_deallocate;
+    void *function_reallocate;
+    void *function_zero_allocate;
+    void *state;
+};
+
+struct rcutils_string_array_t {
+    size_t size;
+    uint8_t **data;
+    struct rcl_allocator_t allocator;
+};
+
+struct rmw_subscription_content_filter_options_t {
+    char *filter_expression;
+    struct rcutils_string_array_t expression_parameters;
+};
+
+struct rmw_subscription_options_t {
+    void *rmw_specific_subscription_payload;
+    uint32_t ignore_local_publications;
+    uint32_t require_unique_network_flow_endpoints; // enum
+    struct rmw_subscription_content_filter_options_t *content_filter_options;
+};
+
+struct rcl_subscription_options_t {
+    struct rmw_qos_profile_t qos;
+    struct rcl_allocator_t allocator;
+    struct rmw_subscription_options_t rmw_subscription_options;
+};
+
+struct rcl_subscription_impl_t {
+    struct rcl_subscription_options_t options;
+    struct rmw_qos_profile_t actual_qos;
+    struct rmw_subscription_t *rmw_handle;
+};
+
+struct rmw_subscription_t {
+    const char *implementation_identifier;
+    void *data;
+    char *topic_name;
+    struct rmw_subscription_options_t options;
+    uint32_t can_loan_messages;
+    uint32_t is_cft_enabled;
+};
+
+struct rcl_subscription_t {
+    struct rcl_subscription_impl_t *impl;
+};
+
+struct rmw_publisher_options_t
+{
+  void * rmw_specific_publisher_payload;
+  uint32_t require_unique_network_flow_endpoints; // enum
+};
+
+struct rcl_publisher_options_t
+{
+  struct rmw_qos_profile_t qos;
+  struct rcl_allocator_t allocator;
+  struct rmw_publisher_options_t rmw_publisher_options;
+};
+
+struct rcl_logger_setting_t
+{
+  const char * name;
+  uint32_t level; // enum rcl_log_severity_t
+};
+
+struct rcl_log_levels_t
+{
+  uint32_t default_logger_level; // enum rcl_log_severity_t
+  struct rcl_logger_setting_t * logger_settings;
+  size_t num_logger_settings;
+  size_t capacity_logger_settings;
+  struct rcl_allocator_t allocator;
+};
+
+struct rcl_arguments_impl_t
+{
+  int32_t * unparsed_ros_args;
+  int32_t num_unparsed_ros_args;
+  int32_t * unparsed_args;
+  int32_t num_unparsed_args;
+  /* struct rcl_params_t */ void * parameter_overrides;
+  char ** parameter_files;
+  int32_t num_param_files_args;
+  /* rcl_remap_t */ void * remap_rules;
+  int32_t num_remap_rules;
+  struct rcl_log_levels_t log_levels;
+  char * external_log_config_file;
+  uint32_t log_stdout_disabled;
+  uint32_t log_rosout_disabled;
+  uint32_t log_ext_lib_disabled;
+  char * enclave;
+  struct rcl_allocator_t allocator;
+};
+
+struct rcl_arguments_t
+{
+  struct rcl_arguments_impl_t * impl;
+};
+
+struct rmw_security_options_t
+{
+  uint32_t enforce_security; // enum rmw_security_enforcement_policy_t
+  char * security_root_path;
+};
+
+struct rmw_init_options_t
+{
+  uint64_t instance_id;
+  const char * implementation_identifier;
+  size_t domain_id;
+  struct rmw_security_options_t security_options;
+  uint32_t localhost_only; // enum rmw_localhost_only_t
+  char * enclave;
+  struct rcl_allocator_t allocator;
+  /* struct rmw_init_options_impl_t */ void * impl;
+};
+
+struct rcl_init_options_impl_t
+{
+  struct rcl_allocator_t allocator;
+  struct rmw_init_options_t rmw_init_options;
+};
+
+struct rcl_init_options_t
+{
+  struct rcl_init_options_impl_t * impl;
+};
+
+struct rmw_context_t
+{
+  uint64_t instance_id;
+  const char * implementation_identifier;
+  struct rmw_init_options_t options;
+  size_t actual_domain_id;
+  /* struct rmw_context_impl_t */ void * impl;
+};
+
+struct rcl_context_impl_t
+{
+  struct rcl_allocator_t allocator;
+  struct rcl_init_options_t init_options;
+  int64_t argc;
+  char ** argv;
+  struct rmw_context_t rmw_context;
+}
+
+struct rcl_context_t
+{
+  struct rcl_arguments_t global_arguments;
+  struct rcl_context_impl_t * impl;
+  uint8_t instance_id_storage[8];
+};
+
+struct rmw_publisher_t
+{
+  const uint8_t * implementation_identifier;
+  void * data;
+  const char * topic_name;
+  struct rmw_publisher_options_t options;
+  uint32_t can_loan_messages;
+};
+
+struct rcl_publisher_impl_t
+{
+  struct rcl_publisher_options_t options;
+  struct rmw_qos_profile_t actual_qos;
+  struct rcl_context_t * context;
+  struct rmw_publisher_t * rmw_handle;
+};
+
+struct rcl_publisher_t {
+    struct rcl_publisher_impl_t *impl;
+};
+
+// (rr) p (char*)&subscription_handle_ - (char*)this
+// $76 = 48
+struct Subscription {
+    uint8_t crud[48];
+    struct rcl_subscription_t* rcl_subscription;
+};
+
+// (rr) p (char*)&rmw_gid_ - (char*)this
+// $3 = 144
+// (rr) p (char*)&publisher_handle_ - (char*)this
+// $4 = 40
+// (rr) p sizeof(publisher_handle_)
+// $5 = 16
+struct Publisher {
+    uint8_t crud0[40];
+    struct rcl_publisher_t* rcl_publisher;
+    uint8_t crud1[144-40-16];
+    struct rmw_gid_t rmw_gid;
+};
+
+
+
+
+BEGIN
+{
+  print("## Latency of received messages");
+  print("# t_measured_ns t_reported_ns topic");
+}
+
+
+
+
+u:./pub:"*Publisher*do_inter_process_publish*",
+u:./pub:"*Publisher*do_intra_process_publish*",
+u:./pub:"*Publisher*do_intra_process_ros_message_publish*"
+{
+  $Publisher = (struct Publisher*)arg0; // this
+
+  $topic = str($Publisher->rcl_publisher->impl->rmw_handle->topic_name);
+
+  // Using the topic as the msgid: the publisher gid uniquely identifies the
+  // pub/sub set with fastrtps, but NOT with cyclone. I don't know why, but I
+  // can use the topic instead
+  //
+  // $msgid = $Publisher->rmw_gid.data;
+  $msgid = $topic;
+
+  @t_ns[$msgid] = elapsed;
+}
+
+
+u:./sub:*Subscription*"handle_message*"
+{
+  $Subscription = (struct Subscription*)arg0; // this
+  $topic = str( $Subscription->rcl_subscription->impl->rmw_handle->topic_name );
+
+  $message_info = (uint8*)arg2;
+  $rmw_message_info = (struct rmw_message_info_t*)($message_info + 8);
+
+  // Using the topic as the msgid: the publisher gid uniquely identifies the
+  // pub/sub set with fastrtps, but NOT with cyclone. I don't know why, but I
+  // can use the topic instead
+  //
+  // $msgid = $rmw_message_info->publisher_gid.data;
+  $msgid = $topic;
+
+  printf("%ld %ld %s\n",
+    elapsed - @t_ns[$msgid],
+    $rmw_message_info->received_timestamp.value-$rmw_message_info->source_timestamp.value,
+    $topic);
+}
+
+END
+{
+  clear(@t_ns);
+}
