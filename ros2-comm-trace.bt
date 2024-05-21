@@ -240,7 +240,7 @@ struct Publisher {
 BEGIN
 {
   print("## Latency of received messages");
-  print("# t_measured_ns t_reported_ns topic");
+  print("# t_ns topic");
 }
 
 
@@ -280,9 +280,8 @@ u:{{SUB}}:*Subscription*"handle_message*"
   // $msgid = $rmw_message_info->publisher_gid.data;
   $msgid = $topic;
 
-  printf("%ld %ld %s\n",
+  printf("%ld %s\n",
     elapsed - @t_ns[$msgid],
-    $rmw_message_info->received_timestamp.value-$rmw_message_info->source_timestamp.value,
     $topic);
 }
 

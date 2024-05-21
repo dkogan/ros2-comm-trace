@@ -91,7 +91,7 @@ cmd=(sudo zsh -c "bpftrace -q <( <ros2-comm-trace.bt | sed 's@{{PUB}}@$PUB@g; s@
 
 if ((plot)) {
    $cmd \
-       | vnl-filter -p t_measured_ms=t_measured_ns/1e6 --stream \
+       | vnl-filter -p t_ms=t_ns/1e6 --stream \
        | feedgnuplot --stream --vnl --autolegend --with 'linespoints pt 7' --ymin 0 --ylabel 'Latency (ms)'
 } else {
    $cmd
