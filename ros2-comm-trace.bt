@@ -246,9 +246,9 @@ BEGIN
 
 
 
-u:./pub:"*Publisher*do_inter_process_publish*",
-u:./pub:"*Publisher*do_intra_process_publish*",
-u:./pub:"*Publisher*do_intra_process_ros_message_publish*"
+u:{{PUB}}:"*Publisher*do_inter_process_publish*",
+u:{{PUB}}:"*Publisher*do_intra_process_publish*",
+u:{{PUB}}:"*Publisher*do_intra_process_ros_message_publish*"
 {
   $Publisher = (struct Publisher*)arg0; // this
 
@@ -265,7 +265,7 @@ u:./pub:"*Publisher*do_intra_process_ros_message_publish*"
 }
 
 
-u:./sub:*Subscription*"handle_message*"
+u:{{SUB}}:*Subscription*"handle_message*"
 {
   $Subscription = (struct Subscription*)arg0; // this
   $topic = str( $Subscription->rcl_subscription->impl->rmw_handle->topic_name );
