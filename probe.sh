@@ -102,12 +102,18 @@ if [[ -n "$topic" ]] {
   event_match_condition="\$topic == \"$topic\""
 } else {
   event_match_condition="1"
+  topic_legend=' topic'
+  topic_format=' %s'
+  topic_arg=',$topic'
 }
 
 cmd=(sudo zsh -c "bpftrace -q <( <ros2-comm-trace.bt \
                                  | sed 's@{{PUB}}@$PUB@g;
                                         s@{{SUB}}@$SUB@g;
-                                        s@{{EVENT_MATCH_CONDITION}}@$event_match_condition@g;'
+                                        s@{{EVENT_MATCH_CONDITION}}@$event_match_condition@g;
+                                        s@{{TOPIC_LEGEND}}@$topic_legend@g;
+                                        s@{{TOPIC_FORMAT}}@$topic_format@g;
+                                        s@{{TOPIC_ARG}}@$topic_arg@g;'
                                )")
 
 if ((plot)) {
