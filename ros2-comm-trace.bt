@@ -285,10 +285,14 @@ u:{{SUB}}:*Subscription*"handle_message*"
     // $msgid = $rmw_message_info->publisher_gid.data;
     $msgid = $topic;
 
-    printf("%ld %ld{{TOPIC_FORMAT}}\n",
-	   nsecs,
-	   elapsed - @t_ns[$msgid]
-           {{TOPIC_ARG}});
+    // If the publisher probe never triggered, don't report the latency
+    if(@t_ns[$msgid])
+    {
+        printf("%ld %ld{{TOPIC_FORMAT}}\n",
+               nsecs,
+               elapsed - @t_ns[$msgid]
+               {{TOPIC_ARG}});
+    }
   }
 }
 
