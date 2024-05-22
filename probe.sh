@@ -46,28 +46,28 @@ unset TEMP
 
 while {true} {
 	case "$1" in
-		'--plot')
-			plot=1
-			shift
-			continue
-		;;
+	        '--plot')
+                        plot=1
+                        shift
+                        continue
+                ;;
 
-		'--topic')
-			topic=$2
-			shift 2
-			continue
-		;;
+                '--topic')
+                        topic=$2
+                        shift 2
+                        continue
+                ;;
 
-		'--')
-			shift
-			break
-		;;
+                '--')
+                        shift
+                        break
+                ;;
 
-		*)
-			echo 'Internal error in argument parsing' >&2
-			exit 1
-		;;
-	esac
+                *)
+                        echo 'Internal error in argument parsing' >&2
+                        exit 1
+                ;;
+        esac
 }
 
 if (( $#* != Ntrailing_options_required )) {
