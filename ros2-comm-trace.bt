@@ -235,18 +235,11 @@ struct Publisher {
 };
 
 
-BEGIN
-{
-  print("## Latency of received messages");
-  print("# t_ns t_latency_ns tid_pub cpu_pub tid_sub cpu_sub{{TOPIC_LEGEND}}");
-}
-
 u:{{PUB}}:"*Publisher*do_inter_process_publish*",
 u:{{PUB}}:"*Publisher*do_intra_process_publish*",
 u:{{PUB}}:"*Publisher*do_intra_process_ros_message_publish*"
 {
   $Publisher = (struct Publisher*)arg0; // this
-
   $topic = str($Publisher->rcl_publisher->impl->rmw_handle->topic_name);
 
   if({{EVENT_MATCH_CONDITION}})
@@ -257,10 +250,28 @@ u:{{PUB}}:"*Publisher*do_intra_process_ros_message_publish*"
     //
     // $msgid = $Publisher->rmw_gid.data;
     $msgid = $topic;
-    @pub_context[$msgid] = (elapsed,tid,cpu);
+    @pub_context[$msgid] = (nsecs,tid,cpu);
   }
 }
 
+u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take,
+u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_event,
+u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_loaned_message,
+u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_loaned_message_with_info,
+u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_sequence,
+u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_serialized_message,
+u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_serialized_message_with_info,
+u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_with_info
+{
+  $subscription = (struct rmw_subscription_t*)arg0;
+  $topic = str( $subscription->topic_name );
+
+  if({{EVENT_MATCH_CONDITION}})
+  {
+    $msgid = $topic;
+    @take_context[$msgid] = (nsecs,tid,cpu);
+  }
+}
 
 u:{{SUB}}:*Subscription*"handle_message*"
 {
@@ -279,17 +290,25 @@ u:{{SUB}}:*Subscription*"handle_message*"
     // $msgid = $rmw_message_info->publisher_gid.data;
     $msgid = $topic;
 
-    $pub_elapsed = @pub_context[$msgid].0;
-    $pub_tid     = @pub_context[$msgid].1;
-    $pub_cpu     = @pub_context[$msgid].2;
+    $nsecs_pub  = @pub_context [$msgid].0;
+    $tid_pub    = @pub_context [$msgid].1;
+    $cpu_pub    = @pub_context [$msgid].2;
+
+    $nsecs_take = @take_context[$msgid].0;
+    $tid_take   = @take_context[$msgid].1;
+    $cpu_take   = @take_context[$msgid].2;
+
+    $nsecs_sub  = nsecs;
+    $tid_sub    = tid;
+    $cpu_sub    = cpu;
+
     // If the publisher probe never triggered, don't report the latency
-    if($pub_elapsed)
+    if($nsecs_pub && $nsecs_take)
     {
-        printf("%ld %ld %ld %d %ld %d{{TOPIC_FORMAT}}\n",
-               nsecs,
-               elapsed - $pub_elapsed,
-               $pub_tid, $pub_cpu,
-               tid, cpu
+        printf("%ld %ld %d %ld %ld %d %ld %ld %d{{TOPIC_FORMAT}}\n",
+               $nsecs_pub,             $tid_pub,  $cpu_pub,
+               $nsecs_take-$nsecs_pub, $tid_take, $cpu_take,
+               $nsecs_sub -$nsecs_pub, $tid_sub,  $cpu_sub
                {{TOPIC_ARG}});
     }
   }
@@ -298,4 +317,5 @@ u:{{SUB}}:*Subscription*"handle_message*"
 END
 {
   clear(@pub_context);
+  clear(@take_context);
 }

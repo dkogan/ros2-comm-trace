@@ -107,11 +107,14 @@ if [[ -n "$topic" ]] {
   topic_arg=',$topic'
 }
 
-cmd=(sudo zsh -c "bpftrace -q <( <ros2-comm-trace.bt \
+# I print the legend here. bpftrace doesn't like my overly-long string, and I
+# don't want to ask for more bpf memory just to print out the legend
+cmd=(sudo zsh -c "echo '## Latency of received messages';
+                  echo '# t_pub_ns tid_pub cpu_pub t_latency_take_ns tid_take cpu_take t_latency_sub_ns tid_sub cpu_sub$topic_legend';
+                  bpftrace -q <( <ros2-comm-trace.bt \
                                  | sed 's@{{PUB}}@$PUB@g;
                                         s@{{SUB}}@$SUB@g;
                                         s@{{EVENT_MATCH_CONDITION}}@$event_match_condition@g;
-                                        s@{{TOPIC_LEGEND}}@$topic_legend@g;
                                         s@{{TOPIC_FORMAT}}@$topic_format@g;
                                         s@{{TOPIC_ARG}}@$topic_arg@g;'
                                )")
@@ -120,7 +123,7 @@ if ((plot)) {
     # The plotter is teed off. The data is always spit out to stdout
     $cmd | \
     tee >( vnl-filter \
-             -p t_s='rel(t_ns)'/1e9,t_latency_ms=t_latency_ns/1e6 \
+             -p t_pub_s='rel(t_pub_ns)'/1e9,t_latency_take_ms=t_latency_take_ns/1e6,t_latency_sub_ms=t_latency_sub_ns/1e6 \
              --stream \
          | feedgnuplot \
              --domain \
@@ -129,7 +132,7 @@ if ((plot)) {
              --autolegend \
              --with 'linespoints pt 7' \
              --ymin 0 \
-             --xlabel 'Time (s)' \
+             --xlabel 'Publish time (s)' \
              --ylabel 'Latency (ms)' )
 } else {
     $cmd
