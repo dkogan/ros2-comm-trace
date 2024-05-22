@@ -117,20 +117,20 @@ cmd=(sudo zsh -c "bpftrace -q <( <ros2-comm-trace.bt \
                                )")
 
 if ((plot)) {
-   $cmd_plot=(vnl-filter \
-                -p t_s='rel(t_ns)'/1e9,t_latency_ms=t_latency_ns/1e6 \
-                --stream \
-              | feedgnuplot \
-                  --domain \
-                  --stream \
-                  --vnl \
-                  --autolegend \
-                  --with 'linespoints pt 7' \
-                  --ymin 0 \
-                  --xlabel 'Time (s)' \
-                  --ylabel 'Latency (ms)')
-
-   $cmd+=('|' $cmd_plot)
+    # The plotter is teed off. The data is always spit out to stdout
+    $cmd | \
+    tee >( vnl-filter \
+             -p t_s='rel(t_ns)'/1e9,t_latency_ms=t_latency_ns/1e6 \
+             --stream \
+         | feedgnuplot \
+             --domain \
+             --stream \
+             --vnl \
+             --autolegend \
+             --with 'linespoints pt 7' \
+             --ymin 0 \
+             --xlabel 'Time (s)' \
+             --ylabel 'Latency (ms)' )
+} else {
+    $cmd
 }
-
-$cmd
