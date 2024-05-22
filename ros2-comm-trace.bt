@@ -235,16 +235,11 @@ struct Publisher {
 };
 
 
-
-
 BEGIN
 {
   print("## Latency of received messages");
   print("# t_ns t_latency_ns tid_pub cpu_pub tid_sub cpu_sub{{TOPIC_LEGEND}}");
 }
-
-
-
 
 u:{{PUB}}:"*Publisher*do_inter_process_publish*",
 u:{{PUB}}:"*Publisher*do_intra_process_publish*",
