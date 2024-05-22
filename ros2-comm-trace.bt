@@ -240,7 +240,7 @@ struct Publisher {
 BEGIN
 {
   print("## Latency of received messages");
-  print("# t_ns t_latency_ns{{TOPIC_LEGEND}}");
+  print("# t_ns t_latency_ns tid_pub tid_sub{{TOPIC_LEGEND}}");
 }
 
 
@@ -262,8 +262,8 @@ u:{{PUB}}:"*Publisher*do_intra_process_ros_message_publish*"
     //
     // $msgid = $Publisher->rmw_gid.data;
     $msgid = $topic;
-
-    @t_ns[$msgid] = elapsed;
+    @t_ns     [$msgid] = elapsed;
+    @tid_pub  [$msgid] = tid;
   }
 }
 
@@ -288,9 +288,11 @@ u:{{SUB}}:*Subscription*"handle_message*"
     // If the publisher probe never triggered, don't report the latency
     if(@t_ns[$msgid])
     {
-        printf("%ld %ld{{TOPIC_FORMAT}}\n",
+        printf("%ld %ld %ld %ld{{TOPIC_FORMAT}}\n",
                nsecs,
-               elapsed - @t_ns[$msgid]
+               elapsed - @t_ns[$msgid],
+               @tid_pub[$msgid],
+               tid
                {{TOPIC_ARG}});
     }
   }
@@ -299,4 +301,5 @@ u:{{SUB}}:*Subscription*"handle_message*"
 END
 {
   clear(@t_ns);
+  clear(@tid_pub);
 }
