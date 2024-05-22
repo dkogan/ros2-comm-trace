@@ -112,9 +112,10 @@ cmd=(sudo zsh -c "bpftrace -q <( <ros2-comm-trace.bt \
 
 if ((plot)) {
    $cmd_plot=(vnl-filter \
-                -p t_ms=t_ns/1e6 \
+                -p t_s='rel(t_ns)'/1e9,t_latency_ms=t_latency_ns/1e6 \
                 --stream \
               | feedgnuplot \
+                  --domain \
                   --stream \
                   --vnl \
                   --autolegend \
