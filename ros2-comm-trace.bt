@@ -262,9 +262,7 @@ u:{{PUB}}:"*Publisher*do_intra_process_ros_message_publish*"
     //
     // $msgid = $Publisher->rmw_gid.data;
     $msgid = $topic;
-    @t_ns     [$msgid] = elapsed;
-    @tid_pub  [$msgid] = tid;
-    @cpu_pub  [$msgid] = cpu;
+    @pub_context[$msgid] = (elapsed,tid,cpu);
   }
 }
 
@@ -286,13 +284,16 @@ u:{{SUB}}:*Subscription*"handle_message*"
     // $msgid = $rmw_message_info->publisher_gid.data;
     $msgid = $topic;
 
+    $pub_elapsed = @pub_context[$msgid].0;
+    $pub_tid     = @pub_context[$msgid].1;
+    $pub_cpu     = @pub_context[$msgid].2;
     // If the publisher probe never triggered, don't report the latency
-    if(@t_ns[$msgid])
+    if($pub_elapsed)
     {
         printf("%ld %ld %ld %d %ld %d{{TOPIC_FORMAT}}\n",
                nsecs,
-               elapsed - @t_ns[$msgid],
-               @tid_pub[$msgid], @cpu_pub[$msgid],
+               elapsed - $pub_elapsed,
+               $pub_tid, $pub_cpu,
                tid, cpu
                {{TOPIC_ARG}});
     }
@@ -301,7 +302,5 @@ u:{{SUB}}:*Subscription*"handle_message*"
 
 END
 {
-  clear(@t_ns);
-  clear(@tid_pub);
-  clear(@cpu_pub);
+  clear(@pub_context);
 }
