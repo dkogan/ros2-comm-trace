@@ -242,7 +242,7 @@ u:{{PUB}}:"*Publisher*do_intra_process_ros_message_publish*"
   $Publisher = (struct Publisher*)arg0; // this
   $topic = str($Publisher->rcl_publisher->impl->rmw_handle->topic_name);
 
-  if({{EVENT_MATCH_CONDITION}})
+  if($topic == str($1))
   {
     // Using the topic as the msgid: the publisher gid uniquely identifies the
     // pub/sub set with fastrtps, but NOT with cyclone. I don't know why, but I
@@ -266,7 +266,7 @@ u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_with_info
   $subscription = (struct rmw_subscription_t*)arg0;
   $topic = str( $subscription->topic_name );
 
-  if({{EVENT_MATCH_CONDITION}})
+  if($topic == str($1))
   {
     $msgid = $topic;
     @take_context[$msgid] = (nsecs,tid,cpu);
@@ -278,7 +278,7 @@ u:{{SUB}}:*Subscription*"handle_message*"
   $Subscription = (struct Subscription*)arg0; // this
   $topic = str( $Subscription->rcl_subscription->impl->rmw_handle->topic_name );
 
-  if({{EVENT_MATCH_CONDITION}})
+  if($topic == str($1))
   {
     $message_info = (uint8*)arg2;
     $rmw_message_info = (struct rmw_message_info_t*)($message_info + 8);
@@ -305,11 +305,10 @@ u:{{SUB}}:*Subscription*"handle_message*"
     // If the publisher probe never triggered, don't report the latency
     if($nsecs_pub && $nsecs_take)
     {
-        printf("%ld %ld %d %ld %ld %d %ld %ld %d{{TOPIC_FORMAT}}\n",
+        printf("%ld %ld %d %ld %ld %d %ld %ld %d\n",
                $nsecs_pub,             $tid_pub,  $cpu_pub,
                $nsecs_take-$nsecs_pub, $tid_take, $cpu_take,
-               $nsecs_sub -$nsecs_pub, $tid_sub,  $cpu_sub
-               {{TOPIC_ARG}});
+               $nsecs_sub -$nsecs_pub, $tid_sub,  $cpu_sub);
     }
   }
 }
