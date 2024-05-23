@@ -251,6 +251,8 @@ u:{{PUB}}:"*Publisher*do_intra_process_ros_message_publish*"
     // $msgid = $Publisher->rmw_gid.data;
     $msgid = $topic;
     @pub_context[$msgid] = (nsecs,tid,cpu);
+
+    @follow_tid[tid] = 1;
   }
 }
 
@@ -272,6 +274,47 @@ u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_with_info
     @take_context[$msgid] = (nsecs,tid,cpu);
   }
 }
+
+tracepoint:sched:sched_wakeup,
+tracepoint:sched:sched_wakeup_new,
+tracepoint:sched:sched_waking
+{
+    $comm_prev = comm;
+    $tid_prev  = (uint32)tid;
+    $prio_prev = curtask->prio;
+
+    $comm_next = args->comm;
+    $tid_next  = (uint32)(args->pid);
+    $prio_next = args->prio;
+
+    if(@follow_tid[tid] || @follow_tid[$tid_next])
+    {
+        printf("%ld - - - - - - - - %s %s:%d %d %d %s:%d %d %d\n",
+               nsecs, probe,
+               $comm_prev,       $tid_prev,       $prio_prev, cpu,
+               $comm_next,       $tid_next,       $prio_next, args->target_cpu);
+        @follow_tid[$tid_next] = 1;
+    }
+}
+tracepoint:sched:sched_switch
+{
+    $comm_next = args->next_comm;
+    $tid_next  = (uint32)(args->next_pid);
+    $prio_next = args->next_prio;
+
+    $comm_prev = args->prev_comm;
+    $tid_prev  = (uint32)(args->prev_pid);
+    $prio_prev = args->prev_prio;
+
+    if(@follow_tid[$tid_prev] || @follow_tid[$tid_next])
+    {
+        printf("%ld - - - - - - - - %s %s:%d %d %d %s:%d %d %d\n",
+               nsecs, probe,
+               $comm_prev,       $tid_prev,       $prio_prev, cpu,
+               $comm_next,       $tid_next,       $prio_next, cpu);
+    }
+}
+
 
 u:{{SUB}}:*Subscription*"handle_message*"
 {
@@ -305,7 +348,7 @@ u:{{SUB}}:*Subscription*"handle_message*"
     // If the publisher probe never triggered, don't report the latency
     if($nsecs_pub && $nsecs_take)
     {
-        printf("%ld %ld %d %ld %ld %d %ld %ld %d\n",
+        printf("%ld %ld %d %ld %ld %d %ld %ld %d - - - - - - -\n",
                $nsecs_pub,             $tid_pub,  $cpu_pub,
                $nsecs_take-$nsecs_pub, $tid_take, $cpu_take,
                $nsecs_sub -$nsecs_pub, $tid_sub,  $cpu_sub);
@@ -313,6 +356,7 @@ u:{{SUB}}:*Subscription*"handle_message*"
 
     clear(@pub_context);
     clear(@take_context);
+    clear(@follow_tid);
   }
 }
 
@@ -320,4 +364,5 @@ END
 {
   clear(@pub_context);
   clear(@take_context);
+  clear(@follow_tid);
 }

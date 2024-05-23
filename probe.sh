@@ -91,7 +91,7 @@ if ! [[ -f "$SUB" ]] {
 # I print the legend here. bpftrace doesn't like my overly-long string, and I
 # don't want to ask for more bpf memory just to print out the legend
 cmd=(sudo zsh -c "echo '## Latency of received messages';
-                  echo '# t_pub_ns tid_pub cpu_pub t_latency_take_ns tid_take cpu_take t_latency_sub_ns tid_sub cpu_sub';
+                  echo '# t_ns tid_pub cpu_pub t_latency_take_ns tid_take cpu_take t_latency_sub_ns tid_sub cpu_sub sched from from_prio from_cpu to to_prio to_cpu';
                   bpftrace -q <( <ros2-comm-trace.bt \
                                  | sed 's@{{PUB}}@$PUB@g;
                                         s@{{SUB}}@$SUB@g;'
@@ -101,7 +101,8 @@ if ((plot)) {
     # The plotter is teed off. The data is always spit out to stdout
     $cmd | \
     tee >( vnl-filter \
-             -p t_pub_s='rel(t_pub_ns)'/1e9,t_latency_take_ms=t_latency_take_ns/1e6,t_latency_sub_ms=t_latency_sub_ns/1e6 \
+             --has t_latency_sub_ns \
+             -p t='rel(t_ns)'/1e9,t_latency_take_ms=t_latency_take_ns/1e6,t_latency_sub_ms=t_latency_sub_ns/1e6 \
              --stream \
          | feedgnuplot \
              --domain \
