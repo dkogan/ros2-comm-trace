@@ -95,7 +95,8 @@ cmd=(sudo zsh -c "echo '## Latency of received messages';
                   bpftrace -q <( <ros2-comm-trace.bt \
                                  | sed 's@{{PUB}}@$PUB@g;
                                         s@{{SUB}}@$SUB@g;'
-                               ) $topic")
+                               ) $topic \
+                 | sed 's/tracepoint:sched:sched_//g'")
 
 if ((plot)) {
     # The plotter is teed off. The data is always spit out to stdout
