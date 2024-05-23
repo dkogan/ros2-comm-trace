@@ -310,6 +310,9 @@ u:{{SUB}}:*Subscription*"handle_message*"
                $nsecs_take-$nsecs_pub, $tid_take, $cpu_take,
                $nsecs_sub -$nsecs_pub, $tid_sub,  $cpu_sub);
     }
+
+    clear(@pub_context);
+    clear(@take_context);
   }
 }
 
