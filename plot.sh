@@ -27,7 +27,15 @@ vnl-filter --perl \
             if(exists $t_start{from}) {
               $dx = $t     - $t_start  {from};
               $dy = to_cpu - $cpu_start{from};
-              say "$t_start{from} wake $cpu_start{from} $dx $dy";
+
+              say "$t_start{from} wake $cpu_start{from}";
+              if($dy == 0)
+              {
+                # We are on the same cpu; make an arc for clearer visualization
+                say "" . ($t_start{from} + $dx/2.) . " wake " . (to_cpu+0.2);
+              }
+              say "$t wake to_cpu";
+              say "0 wake nan"; # bogus point to separate the arcs
             }
           }
           elsif(sched eq "switch") {
@@ -43,8 +51,8 @@ vnl-filter --perl \
     --tuplesizeall 4                                                       \
     --autolegend                                                           \
     --ylabel 'CPU'                                                         \
-    --style     wake 'with vectors filled head'                            \
-    --tuplesize wake 4                                                     \
+    --style     wake 'with lines smooth bezier'                            \
+    --tuplesize wake 2                                                     \
     --y2        t_latency_take_ms,t_latency_sub_ms                         \
     --tuplesize t_latency_take_ms,t_latency_sub_ms 2                       \
     --style     t_latency_take_ms,t_latency_sub_ms 'with linespoints pt 7' \
