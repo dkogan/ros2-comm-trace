@@ -8,10 +8,10 @@
 # that for me
 vnl-filter --perl \
   --begin '$| = 1;' \
-  --sub 'report_switch { $task = shift;
-                         $t    = shift;
-                         return unless $t_waking{$task} && $t_in{$task};
-                         say "$t_waking{$task} $task to_cpu $t_in{$task} $t" }' \
+  --sub 'report_switch { $t    = shift;
+                         $task = shift;
+                         return unless $t_waking{$task} && $t_start{$task};
+                         say "$t_waking{$task} $task_description{$task} to_cpu $t_start{$task} $t" }' \
   --eval '$t = rel(t_ns)/1e9;
           if(defined t_latency_sub_ns) {
             $t_latency_take_ms = t_latency_take_ns/1e6;
@@ -19,11 +19,15 @@ vnl-filter --perl \
             say "$t t_latency_take_ms $t_latency_take_ms t_latency_sub_ms $t_latency_sub_ms";
           }
           elsif(sched eq "waking") {
-            $t_waking{to}   = $t;
+            $task_from = from;
+            $task_to   = to;
+            $t_waking{$task_to}   = $t;
+            $task_description{$task_to} = "$task_from:from_pid:prio=from_prio->$task_to:to_pid:prio=to_prio";
           }
           elsif(sched eq "switch") {
-            $t_in    {to}   = $t;
-            report_switch(from, $t);
+            $t_start{to}   = $t;
+            $cpu_start{to} = to_cpu;
+            report_switch($t, from);
           }' \
 | feedgnuplot                                                              \
     $*                                                                     \
