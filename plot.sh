@@ -8,25 +8,36 @@
 # that for me
 vnl-filter --perl \
   --begin '$| = 1;' \
-  --sub 'report_switch { $t_switching_from    = shift;
-                         $task_switching_from = shift;
-                         return unless $t_waking{$task_switching_from} && $t_start{$task_switching_from};
-                         say "$t_waking{$task_switching_from} $task_description{$task_switching_from} to_cpu $t_start{$task_switching_from} $t_switching_from";
+  --sub 'report_switch_to {   $t                      = shift;
+                              $task_switching_to      = shift;
+                              $task_switching_to_prio = shift;
 
-                         # plot the "waking" arc
-                         $waker = $task_waker{$task_switching_from};
-                         $dx = $t_waking{$task_switching_from} - $t_start{$waker};
-                         $dy = to_cpu - $cpu_start{$waker};
+                              return unless $t_waking{$task_switching_to} && $t_start{$task_switching_to};
 
-                         say "$t_start{$waker} wake $cpu_start{$waker}";
-                         if($dy == 0)
-                         {
-                           # We are on the same cpu; make an arc for clearer visualization
-                           say "" . ($t_start{$waker} + $dx/2.) . " wake " . (to_cpu+0.2);
-                         }
-                         say "$t_waking{$task_switching_from} wake to_cpu";
-                         say "0 wake nan"; # bogus point to separate the arcs
+                              # plot the "waking" arc. This is a line segment from the waking task to the wakee task
+                              $waker = $task_waking{$task_switching_to};
+                              $dx = $t_waking{$task_switching_to} - $t_start{$waker};
+                              $dy = to_cpu - $cpu_start{$waker};
 
+                              say "$t_start{$waker} wake $cpu_start{$waker}";
+                              if($dy == 0)
+                              {
+                                # We are on the same cpu; make an arc for clearer visualization
+                                say "" . ($t_start{$waker} + $dx/2.) . " wake " . (to_cpu+0.2);
+                              }
+                              say "$t_waking{$task_switching_to} wake to_cpu";
+                              say "0 wake nan"; # bogus point to separate the arcs
+}' \
+  --sub 'report_switch_from { $t                        = shift;
+                              $task_switching_from      = shift;
+                              $task_switching_from_prio = shift;
+
+                              return unless $t_waking{$task_switching_from} && $t_start{$task_switching_from};
+
+                              $task_description = "$task_switching_from:prio=$task_switching_from_prio";
+
+                              # Plot the "waking event and the on-cpu interval. This is an xerrorbar"
+                              say "$t_waking{$task_switching_from} $task_description to_cpu $t_start{$task_switching_from} $t";
 }' \
   --eval '$t = rel(t_ns)/1e9;
           if(defined t_latency_sub_ns) {
@@ -41,20 +52,24 @@ vnl-filter --perl \
           elsif(sched eq "waking") {
             $task_from = from;
             $task_to   = to;
-            $t_waking{$task_to}   = $t;
-            $task_description{$task_to} = "$task_to:prio=to_prio";
 
-            if(exists $t_start{from}) {
+            if(exists $t_start{$task_from}) {
               # I want to plot the "waking" arc. The to_cpu is unreliable here,
               # and I plot this later, during the switch, since THAT will know the correct
               # to_cpu
-              $task_waker{to} = from;
+              $t_waking   {$task_to} = $t;
+              $task_waking{$task_to} = $task_from;
+            } else {
+              # Unknown task woke us up. I reset the states so that I dont plot a bogus waking arc
+              $t_waking   {$task_to} = undef;
+              $task_waking{$task_to} = undef;
             }
           }
           elsif(sched eq "switch") {
             $t_start{to}   = $t;
             $cpu_start{to} = to_cpu;
-            report_switch($t, from); # plot the just-completed task
+            report_switch_to(  $t, to,   to_prio);
+            report_switch_from($t, from, from_prio);
           }' \
 | feedgnuplot                                                              \
     $*                                                                     \
