@@ -293,7 +293,10 @@ tracepoint:sched:sched_waking
                nsecs, probe,
                $comm_prev,       $tid_prev,       $prio_prev, cpu,
                $comm_next,       $tid_next,       $prio_next, args->target_cpu);
-        @follow_tid[$tid_next] = 1;
+        if(args->comm != "bpftrace")
+        {
+            @follow_tid[$tid_next] = 1;
+        }
     }
 }
 tracepoint:sched:sched_switch
