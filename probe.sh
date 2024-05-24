@@ -106,7 +106,7 @@ cmd=(sudo zsh -c "echo '## Latency of received messages';
 if ((plot)) {
     # The plotter is teed off. The data is always spit out to stdout
     $cmd | \
-    tee >( ./plot.sh )
+    tee >( ./plot.sh --stream )
 } else {
     $cmd
 }
