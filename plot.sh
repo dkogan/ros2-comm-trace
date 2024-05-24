@@ -8,10 +8,26 @@
 # that for me
 vnl-filter --perl \
   --begin '$| = 1;' \
-  --sub 'report_switch { $t    = shift;
-                         $task = shift;
-                         return unless $t_waking{$task} && $t_start{$task};
-                         say "$t_waking{$task} $task_description{$task} to_cpu $t_start{$task} $t" }' \
+  --sub 'report_switch { $t_switching_from    = shift;
+                         $task_switching_from = shift;
+                         return unless $t_waking{$task_switching_from} && $t_start{$task_switching_from};
+                         say "$t_waking{$task_switching_from} $task_description{$task_switching_from} to_cpu $t_start{$task_switching_from} $t_switching_from";
+
+                         # plot the "waking" arc
+                         $waker = $task_waker{$task_switching_from};
+                         $dx = $t_waking{$task_switching_from} - $t_start{$waker};
+                         $dy = to_cpu - $cpu_start{$waker};
+
+                         say "$t_start{$waker} wake $cpu_start{$waker}";
+                         if($dy == 0)
+                         {
+                           # We are on the same cpu; make an arc for clearer visualization
+                           say "" . ($t_start{$waker} + $dx/2.) . " wake " . (to_cpu+0.2);
+                         }
+                         say "$t_waking{$task_switching_from} wake to_cpu";
+                         say "0 wake nan"; # bogus point to separate the arcs
+
+}' \
   --eval '$t = rel(t_ns)/1e9;
           if(defined t_latency_sub_ns) {
             $t_latency_take_ms = t_latency_take_ns/1e6;
@@ -25,17 +41,10 @@ vnl-filter --perl \
             $task_description{$task_to} = "$task_to:prio=to_prio";
 
             if(exists $t_start{from}) {
-              $dx = $t     - $t_start  {from};
-              $dy = to_cpu - $cpu_start{from};
-
-              say "$t_start{from} wake $cpu_start{from}";
-              if($dy == 0)
-              {
-                # We are on the same cpu; make an arc for clearer visualization
-                say "" . ($t_start{from} + $dx/2.) . " wake " . (to_cpu+0.2);
-              }
-              say "$t wake to_cpu";
-              say "0 wake nan"; # bogus point to separate the arcs
+              # I want to plot the "waking" arc. The to_cpu is unreliable here,
+              # and I plot this later, during the switch, since THAT will know the correct
+              # to_cpu
+              $task_waker{to} = from;
             }
           }
           elsif(sched eq "switch") {
