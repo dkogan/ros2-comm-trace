@@ -29,13 +29,14 @@ vnl-filter --perl \
     $*                                                                     \
     --dataid                                                               \
     --domain                                                               \
-    --with xerrorbars                                                      \
+    --with 'xerrorbars lw 2 pt 7'                                          \
     --tuplesizeall 4                                                       \
     --autolegend                                                           \
     --ylabel 'CPU'                                                         \
     --y2        t_latency_take_ms,t_latency_sub_ms                         \
     --tuplesize t_latency_take_ms,t_latency_sub_ms 2                       \
     --style     t_latency_take_ms,t_latency_sub_ms 'with linespoints pt 7' \
+    --set       'errorbars 4'                                              \
     --y2min 0                                                              \
     --xlabel 'Time (s)'                                                    \
     --y2label 'Latency (ms)'
