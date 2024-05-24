@@ -32,7 +32,11 @@ vnl-filter --perl \
           if(defined t_latency_sub_ns) {
             $t_latency_take_ms = t_latency_take_ns/1e6;
             $t_latency_sub_ms  = t_latency_sub_ns /1e6;
-            say "$t t_latency_take_ms $t_latency_take_ms t_latency_sub_ms $t_latency_sub_ms";
+            say "$t  t_latency_take_ms $t_latency_take_ms t_latency_sub_ms $t_latency_sub_ms";
+            $t0 = $t+$t_latency_take_ms/1e3;
+            say "$t0 t_latency_take_ms $t_latency_take_ms t_latency_sub_ms $t_latency_sub_ms";
+            $t0 = $t+$t_latency_sub_ms/1e3;
+            say "$t0 t_latency_take_ms $t_latency_take_ms t_latency_sub_ms $t_latency_sub_ms";
           }
           elsif(sched eq "waking") {
             $task_from = from;
