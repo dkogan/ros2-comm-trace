@@ -12,6 +12,8 @@ vnl-filter --perl \
                               $task_switching_to      = shift;
                               $task_switching_to_prio = shift;
 
+                              # say STDERR "t=$t task_switching_to=$task_switching_to task_switching_to_prio=$task_switching_to_prio";
+
                               return unless $t_waking{$task_switching_to} && $t_start{$task_switching_to};
 
                               # plot the "waking" arc. This is a line segment from the waking task to the wakee task
@@ -19,14 +21,27 @@ vnl-filter --perl \
                               $dx = $t_waking{$task_switching_to} - $t_start{$waker};
                               $dy = to_cpu - $cpu_start{$waker};
 
-                              say "$t_start{$waker} wake $cpu_start{$waker}";
-                              if($dy == 0)
+                              # say STDERR "plotting the waking arc; task_waking{task_switching_to}=$task_waking{$task_switching_to} t_waking{task_switching_to}=$t_waking{$task_switching_to} t_start_{task_waking{task_switching_to}} = $t_start{$task_waking{$task_switching_to}} dx=$dx";
+
+                              # switching latencies > 500ms are probably bogus,
+                              # and I dont plot them. I dont record ALL the events, and its possible that I
+                              # missed some crucial ones, causing these fictitiously-high latencies to be shown
+                              #
+
+                              # Sometimes we see being switched to a task
+                              # without seeing the sched_waking or sched_wakeup. In those cases well see dx<0,
+                              # and I simply dont plot the arc
+                              if($dx < 0.5 && $dx > 0)
                               {
-                                # We are on the same cpu; make an arc for clearer visualization
-                                say "" . ($t_start{$waker} + $dx/2.) . " wake " . (to_cpu+0.2);
+                                say "$t_start{$waker} wake $cpu_start{$waker}";
+                                if($dy == 0)
+                                {
+                                  # We are on the same cpu; make an arc for clearer visualization
+                                  say "" . ($t_start{$waker} + $dx/2.) . " wake " . (to_cpu+0.2);
+                                }
+                                say "$t_waking{$task_switching_to} wake to_cpu";
+                                say "0 wake nan"; # bogus point to separate the arcs
                               }
-                              say "$t_waking{$task_switching_to} wake to_cpu";
-                              say "0 wake nan"; # bogus point to separate the arcs
 }' \
   --sub 'report_switch_from { $t                        = shift;
                               $task_switching_from      = shift;
