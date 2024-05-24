@@ -2,9 +2,12 @@
 
 # Read STDIN from probe.sh, and make a plot
 #
-# --stream may be passed, and will be fed to the vnl-filter and the feedgnuplot
+# --stream may be passed, and will be fed to the vnl-filter and the feedgnuplot.
+#
+# temporarily I --begin '$| = 1;' below. vnl-filter --stream --perl should do
+# that for me
 vnl-filter --perl \
-  $* \
+  --begin '$| = 1;' \
   --sub 'report_switch { $task = shift;
                          $t    = shift;
                          return unless $t_waking{$task} && $t_in{$task};
