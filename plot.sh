@@ -23,6 +23,12 @@ vnl-filter --perl \
             $task_to   = to;
             $t_waking{$task_to}   = $t;
             $task_description{$task_to} = "$task_from:from_pid:prio=from_prio->$task_to:to_pid:prio=to_prio";
+
+            if(exists $t_start{from}) {
+              $dx = $t     - $t_start  {from};
+              $dy = to_cpu - $cpu_start{from};
+              say "$t_start{from} wake $cpu_start{from} $dx $dy";
+            }
           }
           elsif(sched eq "switch") {
             $t_start{to}   = $t;
@@ -37,6 +43,8 @@ vnl-filter --perl \
     --tuplesizeall 4                                                       \
     --autolegend                                                           \
     --ylabel 'CPU'                                                         \
+    --style     wake 'with vectors filled head'                            \
+    --tuplesize wake 4                                                     \
     --y2        t_latency_take_ms,t_latency_sub_ms                         \
     --tuplesize t_latency_take_ms,t_latency_sub_ms 2                       \
     --style     t_latency_take_ms,t_latency_sub_ms 'with linespoints pt 7' \
