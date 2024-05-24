@@ -22,7 +22,7 @@ vnl-filter --perl \
             $task_from = from;
             $task_to   = to;
             $t_waking{$task_to}   = $t;
-            $task_description{$task_to} = "$task_from:from_pid:prio=from_prio->$task_to:to_pid:prio=to_prio";
+            $task_description{$task_to} = "$task_to:prio=to_prio";
 
             if(exists $t_start{from}) {
               $dx = $t     - $t_start  {from};
@@ -41,7 +41,7 @@ vnl-filter --perl \
           elsif(sched eq "switch") {
             $t_start{to}   = $t;
             $cpu_start{to} = to_cpu;
-            report_switch($t, from);
+            report_switch($t, from); # plot the just-completed task
           }' \
 | feedgnuplot                                                              \
     $*                                                                     \
