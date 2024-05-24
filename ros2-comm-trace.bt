@@ -289,7 +289,7 @@ tracepoint:sched:sched_waking
 
     if(@follow_tid[tid] || @follow_tid[$tid_next])
     {
-        printf("%ld - - - - - - - - %s %s:%d %d %d %s:%d %d %d\n",
+        printf("%ld - - - - - - - - %s >>>%s<<<:%d %d %d >>>%s<<<:%d %d %d\n",
                nsecs, probe,
                $comm_prev,       $tid_prev,       $prio_prev, cpu,
                $comm_next,       $tid_next,       $prio_next, args->target_cpu);
@@ -308,7 +308,7 @@ tracepoint:sched:sched_switch
 
     if(@follow_tid[$tid_prev] || @follow_tid[$tid_next])
     {
-        printf("%ld - - - - - - - - %s %s:%d %d %d %s:%d %d %d\n",
+        printf("%ld - - - - - - - - %s >>>%s<<<:%d %d %d >>>%s<<<:%d %d %d\n",
                nsecs, probe,
                $comm_prev,       $tid_prev,       $prio_prev, cpu,
                $comm_next,       $tid_next,       $prio_next, cpu);

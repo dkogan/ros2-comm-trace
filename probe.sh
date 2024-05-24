@@ -90,13 +90,18 @@ if ! [[ -f "$SUB" ]] {
 
 # I print the legend here. bpftrace doesn't like my overly-long string, and I
 # don't want to ask for more bpf memory just to print out the legend
+#
+# The >>>...<<< replacement replaces all whitespace between those markers with
+# _. Needed to post-process the process names coming out of bpftrace
 cmd=(sudo zsh -c "echo '## Latency of received messages';
                   echo '# t_ns tid_pub cpu_pub t_latency_take_ns tid_take cpu_take t_latency_sub_ns tid_sub cpu_sub sched from from_prio from_cpu to to_prio to_cpu';
                   bpftrace -q <( <ros2-comm-trace.bt \
                                  | sed 's@{{PUB}}@$PUB@g;
                                         s@{{SUB}}@$SUB@g;'
                                ) $topic \
-                 | sed 's/tracepoint:sched:sched_//g'")
+                 | perl -pe 'BEGIN { $| = 1; }
+                             s/tracepoint:sched:sched_//g;
+                             s{>>>(.*?)<<<}{\$1 =~ s/\s/_/gr}ge'")
 
 if ((plot)) {
     # The plotter is teed off. The data is always spit out to stdout
