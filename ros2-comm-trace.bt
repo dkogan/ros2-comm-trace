@@ -278,6 +278,7 @@ u:/opt/ros/humble/lib/librmw_implementation.so:rmw_take_with_info
 tracepoint:sched:sched_wakeup,
 tracepoint:sched:sched_wakeup_new,
 tracepoint:sched:sched_waking
+/0/
 {
     $comm_prev = comm;
     $tid_prev  = (uint32)tid;
@@ -300,6 +301,7 @@ tracepoint:sched:sched_waking
     }
 }
 tracepoint:sched:sched_switch
+/0/
 {
     $comm_next = args->next_comm;
     $tid_next  = (uint32)(args->next_pid);
